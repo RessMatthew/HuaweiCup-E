@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from bearing_fault_analysis import load_and_process_data, calculate_skf6205_frequencies
+from bearing_fault_detector import load_and_process_data, calculate_skf6205_frequencies
 
 def analyze_cor_patterns(results):
     """
@@ -64,7 +64,7 @@ def main():
     
     # Process more samples for better analysis
     print("Loading and processing data...")
-    results = load_and_process_data(csv_path, num_samples=50)
+    results = load_and_process_data(csv_path, num_samples=10937)
     
     # Analyze COR patterns
     cor_df = analyze_cor_patterns(results)

@@ -1,8 +1,5 @@
 .debug/
-data/目标域数据集
-data/源域数据集
-data/data_分割后_完整样本.csv
-data/data_分割后_带标签样本.csv
+data/
 notebook/
 
 .bashrc
