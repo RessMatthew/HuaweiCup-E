@@ -170,80 +170,97 @@ def load_and_process_data(csv_path, num_samples=10):
             'rpm': rpm,
             'target_label': target_label
         }
+        # Store original signal for plotting
+        result['original_signal'] = signal_data
         
         results.append(result)
     
     return results
 
-def plot_results(results, sample_idx=0):
+def plot_results(results, sample_idx=0, original_signal_data=None):
     """
-    Plot processing results for visualization
+    Plot processing results for visualization with updated color scheme
     """
     result = results[sample_idx]
     sample_info = result['sample_info']
     
-    fig, axes = plt.subplots(3, 2, figsize=(15, 12))
-    fig.suptitle(f"Bearing Fault Analysis - Sample {sample_info['index']} (RPM: {sample_info['rpm']}, Label: {sample_info['target_label']})")
+    # Specified color scheme
+    main_color = '#237B9F'  # For first 5 plots solid lines
+    accent_colors = ['#FEE066', '#EC817E', '#AD0B08', '#71BFB2']  # For bars and dashed lines
     
-    # Original signal (first 1000 points for visibility)
-    axes[0,0].plot(result['filtered_signal'][:1000])
-    axes[0,0].set_title('Filtered Signal (High-pass)')
+    # Create 2x3 subplot layout for 6 plots
+    fig, axes = plt.subplots(2, 3, figsize=(18, 12))
+    fig.suptitle(f"Bearing Fault Analysis - Sample {sample_info['index']} (RPM: {sample_info['rpm']}, Label: {sample_info['target_label']})", 
+                 fontsize=16, fontweight='bold')
+    
+    # Plot 1: Original signal (before filtering) - if available
+    if original_signal_data is not None:
+        axes[0,0].plot(original_signal_data[:1000], color=main_color, linewidth=1.5)
+        axes[0,0].set_title('Original Signal (Before Filtering)', fontweight='bold', color='black')
+    else:
+        # If no original data, show a placeholder
+        axes[0,0].text(0.5, 0.5, 'Original Signal\n(Data Not Available)', 
+                       ha='center', va='center', transform=axes[0,0].transAxes, fontsize=12, color=main_color)
+        axes[0,0].set_title('Original Signal (Before Filtering)', fontweight='bold', color='black')
     axes[0,0].set_xlabel('Sample')
     axes[0,0].set_ylabel('Amplitude')
+    axes[0,0].grid(True, alpha=0.3)
     
-    # Envelope
-    axes[0,1].plot(result['envelope'][:1000])
-    axes[0,1].set_title('Envelope (Hilbert Transform)')
+    # Plot 2: Filtered signal (after high-pass)
+    axes[0,1].plot(result['filtered_signal'][:1000], color=main_color, linewidth=1.5)
+    axes[0,1].set_title('Filtered Signal (High-pass)', fontweight='bold', color='black')
     axes[0,1].set_xlabel('Sample')
     axes[0,1].set_ylabel('Amplitude')
+    axes[0,1].grid(True, alpha=0.3)
     
-    # Spectrum
-    axes[1,0].plot(result['frequencies'][:len(result['frequencies'])//2], 
-                   result['spectrum'][:len(result['spectrum'])//2])
-    axes[1,0].set_title('Envelope Spectrum')
-    axes[1,0].set_xlabel('Frequency (Hz)')
+    # Plot 3: Envelope (Hilbert transform)
+    axes[0,2].plot(result['envelope'][:1000], color=main_color, linewidth=1.5)
+    axes[0,2].set_title('Envelope (Hilbert Transform)', fontweight='bold', color='black')
+    axes[0,2].set_xlabel('Sample')
+    axes[0,2].set_ylabel('Amplitude')
+    axes[0,2].grid(True, alpha=0.3)
+    
+    # Plot 4: Order normalized signal
+    axes[1,0].plot(result['order_normalized'][:1000], color=main_color, linewidth=1.5)
+    axes[1,0].set_title('Order Normalized Signal', fontweight='bold', color='black')
+    axes[1,0].set_xlabel('Sample')
     axes[1,0].set_ylabel('Amplitude')
+    axes[1,0].grid(True, alpha=0.3)
     
-    # Mark fault frequencies
+    # Plot 5: Envelope Spectrum (FFT)
+    half_len = len(result['frequencies'])//2
+    axes[1,1].plot(result['frequencies'][:half_len], result['spectrum'][:half_len], color=main_color, linewidth=1.5)
+    axes[1,1].set_title('Envelope Spectrum (FFT)', fontweight='bold', color='black')
+    axes[1,1].set_xlabel('Frequency (Hz)')
+    axes[1,1].set_ylabel('Amplitude')
+    axes[1,1].grid(True, alpha=0.3)
+    
+    # Mark fault frequencies on spectrum with accent colors (dashed lines)
     fault_freqs = result['fault_frequencies']
-    for name, freq in fault_freqs.items():
+    for i, (name, freq) in enumerate(fault_freqs.items()):
         if freq <= max(result['frequencies'])/2:
-            axes[1,0].axvline(x=freq, color='r', linestyle='--', alpha=0.7, label=name)
-    axes[1,0].legend()
+            axes[1,1].axvline(x=freq, color=accent_colors[i % len(accent_colors)], linestyle='--', alpha=0.8, linewidth=2, label=f'{name} ({freq:.1f}Hz)')
+    axes[1,1].legend(loc='upper right', fontsize=8, framealpha=0.8)
     
-    # COR scores
+    # Plot 6: COR Index Scores with accent colors
     cor_scores = result['cor_scores']
     fault_names = list(cor_scores.keys())
     cor_values = list(cor_scores.values())
     
-    axes[1,1].bar(fault_names, cor_values)
-    axes[1,1].set_title('COR Index Scores')
-    axes[1,1].set_ylabel('COR Index')
-    axes[1,1].tick_params(axis='x', rotation=45)
+    bars = axes[1,2].bar(fault_names, cor_values, color=accent_colors[:len(fault_names)], alpha=0.8, edgecolor='black', linewidth=1)
+    axes[1,2].set_title('COR Index Scores', fontweight='bold', color='black')
+    axes[1,2].set_ylabel('COR Index')
+    axes[1,2].tick_params(axis='x', rotation=45)
+    axes[1,2].grid(True, alpha=0.3, axis='y')
     
-    # Order normalized signal
-    axes[2,0].plot(result['order_normalized'][:1000])
-    axes[2,0].set_title('Order Normalized Signal')
-    axes[2,0].set_xlabel('Sample')
-    axes[2,0].set_ylabel('Amplitude')
-    
-    # Fault frequency table
-    axes[2,1].axis('tight')
-    axes[2,1].axis('off')
-    table_data = []
-    for name, freq in fault_freqs.items():
-        table_data.append([name, f"{freq:.2f} Hz", f"{cor_scores[name]:.4f}"])
-    
-    table = axes[2,1].table(cellText=table_data,
-                           colLabels=['Fault Type', 'Frequency', 'COR Index'],
-                           cellLoc='center',
-                           loc='center')
-    table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    axes[2,1].set_title('Fault Characteristic Frequencies')
+    # Add value labels on bars
+    for bar, value in zip(bars, cor_values):
+        height = bar.get_height()
+        axes[1,2].text(bar.get_x() + bar.get_width()/2., height + height*0.01,
+                      f'{value:.4f}', ha='center', va='bottom', fontsize=9, fontweight='bold', color='black')
     
     plt.tight_layout()
-    plt.savefig(f'bearing_analysis_sample_{sample_idx}.png', dpi=300, bbox_inches='tight')
+    plt.savefig(f'bearing_analysis_sample_{sample_idx}_complete_updated.png', dpi=300, bbox_inches='tight')
     plt.show()
 
 def main():
@@ -265,8 +282,8 @@ def main():
             print(f"  {fault_type}: {cor_score:.4f}")
         print()
     
-    # Plot first sample
-    plot_results(results, sample_idx=0)
+    # Plot first sample with original signal
+    plot_results(results, sample_idx=0, original_signal_data=results[0]['original_signal'])
     
     return results
 
