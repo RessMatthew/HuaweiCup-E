@@ -1,5 +1,6 @@
 # 时域图绘制工具
 # 根据输入的CSV文件路径，自动检测表头中的DE、FE、BA字段，并绘制相应数量的时域图
+# 时域信号可视化工具 - 绘制轴承传感器数据的时域波形图，支持批量处理和自定义样式
 
 import pandas as pd
 import numpy as np
@@ -11,7 +12,6 @@ from matplotlib import rcParams
 from matplotlib.patches import Rectangle
 import os
 from pathlib import Path
-
 
 def setup_chinese_font():
     """

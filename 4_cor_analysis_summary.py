@@ -1,3 +1,5 @@
+# COR分析汇总工具 - 批量分析COR指数模式，统计故障特征并输出分析结果
+
 import pandas as pd
 import numpy as np
 from bearing_fault_detector import load_and_process_data, calculate_skf6205_frequencies

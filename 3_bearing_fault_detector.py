@@ -1,3 +1,5 @@
+# 轴承故障检测器 - 基于包络分析和COR指数的特征提取，计算BPFO/BPFI/BSF/FTF等故障特征频率
+
 import pandas as pd
 import numpy as np
 from scipy import signal

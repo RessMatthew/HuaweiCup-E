@@ -1,3 +1,5 @@
+# 数据格式转换器 - 将MATLAB的.mat文件批量转换为CSV格式，保持原有目录结构
+
 import os
 import scipy.io
 import pandas as pd
