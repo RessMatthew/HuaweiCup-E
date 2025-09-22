@@ -97,9 +97,65 @@ def plot_3d_scatter_in_sphere():
     ax.legend(title='Target Labels', loc='upper right', bbox_to_anchor=(1.0, 1.0))
 
     # 保存图片
-    plt.savefig('pca_3d_scatter_in_sphere.png', dpi=300, bbox_inches='tight')
+    plt.savefig('pca_3d.png', dpi=300, bbox_inches='tight')
 
-    plt.show()
+def plot_2d_pca():
+    """
+    读取特征数据，进行PCA降维到2维，并绘制散点图。
+    """
+    # --- 1. 数据加载和准备 ---
+    file_path = 'data/data_特征提取汇总_标准化.csv'
+    try:
+        data = pd.read_csv(file_path)
+    except FileNotFoundError:
+        print(f"错误：找不到文件 '{file_path}'。请确保文件路径正确。")
+        return
+
+    # 分离特征和标签
+    target_labels = data.iloc[:, 0]
+    features = data.iloc[:, 1:]
+    
+    # 获取唯一的类别和对应的颜色
+    unique_labels = target_labels.unique()
+    
+    # --- 2. 配色方案 ---
+    # 从 '配色方案.md' 获取
+    colors = ['#237B9F', '#71BFB2', '#AD0B08', '#EC817E', '#FEE066']
+    # 如果类别多于颜色，循环使用颜色
+    color_map = {label: colors[i % len(colors)] for i, label in enumerate(unique_labels)}
+    alpha = 0.85
+
+    # --- 3. PCA 降维 ---
+    # 将特征降到2维
+    pca = PCA(n_components=2)
+    features_2d = pca.fit_transform(features)
+
+    # 打印解释方差比
+    print(f"2D PCA Explained Variance Ratio: {pca.explained_variance_ratio_}")
+    print(f"2D Total Explained Variance: {sum(pca.explained_variance_ratio_):.2f}")
+
+    # --- 4. 绘制2D散点图 ---
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+    # 绘制散点
+    for label in unique_labels:
+        mask = target_labels == label
+        ax.scatter(
+            features_2d[mask, 0],
+            features_2d[mask, 1],
+            c=color_map[label],
+            label=label,
+            alpha=alpha,
+            s=50  # 点的大小
+        )
+    
+    # 添加图例
+    ax.legend(title='Target Labels')
+
+    # 保存图片
+    plt.savefig('pca_2d.png', dpi=300, bbox_inches='tight')
+
 
 if __name__ == '__main__':
     plot_3d_scatter_in_sphere()
+    plot_2d_pca()
