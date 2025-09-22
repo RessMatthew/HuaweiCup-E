@@ -184,9 +184,9 @@ def plot_results(results, sample_idx=0, original_signal_data=None):
     result = results[sample_idx]
     sample_info = result['sample_info']
     
-    # Specified color scheme
+    # Specified color scheme with 85% opacity
     main_color = '#237B9F'  # For first 5 plots solid lines
-    accent_colors = ['#FEE066', '#EC817E', '#AD0B08', '#71BFB2']  # For bars and dashed lines
+    accent_colors = ['#FEE066D9', '#EC817ED9', '#AD0B08D9', '#71BFB2D9']  # For bars and dashed lines (85% opacity)
     
     # Create 2x3 subplot layout for 6 plots
     fig, axes = plt.subplots(2, 3, figsize=(18, 12))
@@ -204,28 +204,28 @@ def plot_results(results, sample_idx=0, original_signal_data=None):
         axes[0,0].set_title('Original Signal (Before Filtering)', fontweight='bold', color='black')
     axes[0,0].set_xlabel('Sample')
     axes[0,0].set_ylabel('Amplitude')
-    axes[0,0].grid(True, alpha=0.3)
+    axes[0,0].grid(True, alpha=0.85)
     
     # Plot 2: Filtered signal (after high-pass)
     axes[0,1].plot(result['filtered_signal'][:1000], color=main_color, linewidth=1.5)
     axes[0,1].set_title('Filtered Signal (High-pass)', fontweight='bold', color='black')
     axes[0,1].set_xlabel('Sample')
     axes[0,1].set_ylabel('Amplitude')
-    axes[0,1].grid(True, alpha=0.3)
+    axes[0,1].grid(True, alpha=0.85)
     
     # Plot 3: Envelope (Hilbert transform)
     axes[0,2].plot(result['envelope'][:1000], color=main_color, linewidth=1.5)
     axes[0,2].set_title('Envelope (Hilbert Transform)', fontweight='bold', color='black')
     axes[0,2].set_xlabel('Sample')
     axes[0,2].set_ylabel('Amplitude')
-    axes[0,2].grid(True, alpha=0.3)
+    axes[0,2].grid(True, alpha=0.85)
     
     # Plot 4: Order normalized signal
     axes[1,0].plot(result['order_normalized'][:1000], color=main_color, linewidth=1.5)
     axes[1,0].set_title('Order Normalized Signal', fontweight='bold', color='black')
     axes[1,0].set_xlabel('Sample')
     axes[1,0].set_ylabel('Amplitude')
-    axes[1,0].grid(True, alpha=0.3)
+    axes[1,0].grid(True, alpha=0.85)
     
     # Plot 5: Envelope Spectrum (FFT)
     half_len = len(result['frequencies'])//2
@@ -233,25 +233,25 @@ def plot_results(results, sample_idx=0, original_signal_data=None):
     axes[1,1].set_title('Envelope Spectrum (FFT)', fontweight='bold', color='black')
     axes[1,1].set_xlabel('Frequency (Hz)')
     axes[1,1].set_ylabel('Amplitude')
-    axes[1,1].grid(True, alpha=0.3)
+    axes[1,1].grid(True, alpha=0.85)
     
     # Mark fault frequencies on spectrum with accent colors (dashed lines)
     fault_freqs = result['fault_frequencies']
     for i, (name, freq) in enumerate(fault_freqs.items()):
         if freq <= max(result['frequencies'])/2:
-            axes[1,1].axvline(x=freq, color=accent_colors[i % len(accent_colors)], linestyle='--', alpha=0.8, linewidth=2, label=f'{name} ({freq:.1f}Hz)')
-    axes[1,1].legend(loc='upper right', fontsize=8, framealpha=0.8)
+            axes[1,1].axvline(x=freq, color=accent_colors[i % len(accent_colors)], linestyle='--', alpha=0.85, linewidth=2, label=f'{name} ({freq:.1f}Hz)')
+    axes[1,1].legend(loc='upper right', fontsize=8, framealpha=0.85)
     
     # Plot 6: COR Index Scores with accent colors
     cor_scores = result['cor_scores']
     fault_names = list(cor_scores.keys())
     cor_values = list(cor_scores.values())
     
-    bars = axes[1,2].bar(fault_names, cor_values, color=accent_colors[:len(fault_names)], alpha=0.8, edgecolor='black', linewidth=1)
+    bars = axes[1,2].bar(fault_names, cor_values, color=accent_colors[:len(fault_names)], alpha=0.85, edgecolor='black', linewidth=1)
     axes[1,2].set_title('COR Index Scores', fontweight='bold', color='black')
     axes[1,2].set_ylabel('COR Index')
     axes[1,2].tick_params(axis='x', rotation=45)
-    axes[1,2].grid(True, alpha=0.3, axis='y')
+    axes[1,2].grid(True, alpha=0.85, axis='y')
     
     # Add value labels on bars
     for bar, value in zip(bars, cor_values):
