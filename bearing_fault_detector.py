@@ -195,7 +195,7 @@ def plot_results(results, sample_idx=0, original_signal_data=None):
     
     # Plot 1: Original signal (before filtering) - if available
     if original_signal_data is not None:
-        axes[0,0].plot(original_signal_data[:1000], color=main_color, linewidth=1.5)
+        axes[0,0].plot(original_signal_data, color=main_color, linewidth=1.5)
         axes[0,0].set_title('Original Signal (Before Filtering)', fontweight='bold', color='black')
     else:
         # If no original data, show a placeholder
@@ -207,21 +207,21 @@ def plot_results(results, sample_idx=0, original_signal_data=None):
     axes[0,0].grid(True, alpha=0.85)
     
     # Plot 2: Filtered signal (after high-pass)
-    axes[0,1].plot(result['filtered_signal'][:1000], color=main_color, linewidth=1.5)
+    axes[0,1].plot(result['filtered_signal'], color=main_color, linewidth=1.5)
     axes[0,1].set_title('Filtered Signal (High-pass)', fontweight='bold', color='black')
     axes[0,1].set_xlabel('Sample')
     axes[0,1].set_ylabel('Amplitude')
     axes[0,1].grid(True, alpha=0.85)
     
     # Plot 3: Envelope (Hilbert transform)
-    axes[0,2].plot(result['envelope'][:1000], color=main_color, linewidth=1.5)
+    axes[0,2].plot(result['envelope'], color=main_color, linewidth=1.5)
     axes[0,2].set_title('Envelope (Hilbert Transform)', fontweight='bold', color='black')
     axes[0,2].set_xlabel('Sample')
     axes[0,2].set_ylabel('Amplitude')
     axes[0,2].grid(True, alpha=0.85)
     
     # Plot 4: Order normalized signal
-    axes[1,0].plot(result['order_normalized'][:1000], color=main_color, linewidth=1.5)
+    axes[1,0].plot(result['order_normalized'], color=main_color, linewidth=1.5)
     axes[1,0].set_title('Order Normalized Signal', fontweight='bold', color='black')
     axes[1,0].set_xlabel('Sample')
     axes[1,0].set_ylabel('Amplitude')
@@ -270,7 +270,7 @@ def main():
     csv_path = "/Users/matthew/Workspace/HuaweiCup-E/data/data_分割后_带标签样本.csv"
     
     # Process first 10 samples
-    results = load_and_process_data(csv_path, num_samples=10)
+    results = load_and_process_data(csv_path, num_samples=2000)
     
     # Print summary of COR scores
     print("\n=== COR Index Summary ===")
@@ -283,7 +283,7 @@ def main():
         print()
     
     # Plot first sample with original signal
-    plot_results(results, sample_idx=0, original_signal_data=results[0]['original_signal'])
+    plot_results(results, sample_idx=1999, original_signal_data=results[1999]['original_signal'])
     
     return results
 
