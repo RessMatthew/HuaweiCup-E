@@ -3,6 +3,7 @@ data/
 notebook/
 results/
 catboost_info/
+models/
 
 .bashrc
 

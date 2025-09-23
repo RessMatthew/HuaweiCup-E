@@ -47,6 +47,10 @@ class MLFramework:
                 # Handle traditional ML models
                 results = self.traditional_ml.cross_validate_model(model_name, X, y, cv_splits)
 
+            # Save trained models if available
+            if 'trained_models' in results and results['trained_models']:
+                self.save_trained_models(model_name, results['trained_models'])
+
             return results
 
         except Exception as e:
