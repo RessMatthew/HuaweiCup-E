@@ -8,7 +8,7 @@
 支持分类和概率预测。
 
 使用方法:
-python 11_model_inference.py --model xgboost --data data/t_data_out.csv --segment_voting --segments_per_sample 124
+python 15_model_inference.py --model xgboost --data data/t_data_out.csv --segment_voting --segments_per_sample 124
 """
 
 import sys
