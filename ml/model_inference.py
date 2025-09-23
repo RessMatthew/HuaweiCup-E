@@ -255,6 +255,85 @@ class ModelInference:
 
         return results_df
 
+    def inference_with_segment_voting(self, model_name: str, csv_path: str,
+                                     feature_columns: Optional[List[str]] = None,
+                                     voting: str = 'majority', segments_per_sample: int = 124) -> pd.DataFrame:
+        """Perform inference with segment-based voting for unlabeled data"""
+        logger.info(f"Loading segment data from {csv_path}")
+
+        # Load data
+        df = pd.read_csv(csv_path)
+        total_rows = len(df)
+
+        # Validate data structure
+        if total_rows % segments_per_sample != 0:
+            logger.warning(f"Total rows ({total_rows}) is not divisible by segments_per_sample ({segments_per_sample})")
+
+        num_samples = total_rows // segments_per_sample
+        logger.info(f"Found {num_samples} samples with {segments_per_sample} segments each")
+
+        # If feature columns not specified, use all columns (no target column in unlabeled data)
+        if feature_columns is None:
+            feature_columns = df.columns.tolist()
+
+        X = df[feature_columns].values
+        logger.info(f"Using features: {feature_columns}")
+        logger.info(f"Data shape: {X.shape}")
+
+        # Load models
+        self.load_models(model_name)
+
+        # Make predictions for all segments
+        segment_predictions = self.predict_ensemble(X, voting=voting)
+
+        # Reshape predictions for voting
+        segment_predictions = segment_predictions.reshape(num_samples, segments_per_sample)
+
+        # Apply majority voting for each sample
+        final_predictions = []
+        segment_vote_counts = []  # Store vote counts for each sample
+
+        for i in range(num_samples):
+            sample_segments = segment_predictions[i, :]
+            unique, counts = np.unique(sample_segments, return_counts=True)
+
+            # Find the majority class
+            majority_class = unique[np.argmax(counts)]
+            final_predictions.append(majority_class)
+
+            # Store vote counts as a dictionary
+            vote_count = dict(zip(unique, counts))
+            segment_vote_counts.append(vote_count)
+
+            logger.info(f"Sample {i+1}: Majority class {majority_class}, Vote distribution: {vote_count}")
+
+        # Create results dataframe with detailed voting information
+        results_data = []
+        for i in range(num_samples):
+            vote_count = segment_vote_counts[i]
+            for class_label, count in vote_count.items():
+                results_data.append({
+                    'sample_id': i + 1,
+                    'predicted_label': final_predictions[i],
+                    'total_segments': segments_per_sample,
+                    'class_label': class_label,
+                    'vote_count': count,
+                    'vote_percentage': (count / segments_per_sample) * 100
+                })
+
+        results_df = pd.DataFrame(results_data)
+
+        # Log summary
+        logger.info("="*60)
+        logger.info("📊 分段投票预测结果汇总:")
+        final_pred_counts = pd.Series(final_predictions).value_counts()
+        for label, count in final_pred_counts.items():
+            percentage = (count / num_samples) * 100
+            logger.info(f"类别 {label}: {count} 个样本 ({percentage:.1f}%)")
+        logger.info("="*60)
+
+        return results_df
+
 def main():
     """Main function for command line interface"""
     parser = argparse.ArgumentParser(description='Model Inference Tool')
