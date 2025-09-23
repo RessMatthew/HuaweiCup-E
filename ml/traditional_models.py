@@ -1,6 +1,8 @@
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, ExtraTreesClassifier, GradientBoostingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import logging
 from typing import Dict, Any
@@ -34,6 +36,12 @@ class TraditionalMLModels:
 
         # Gradient Boosting
         self.models['gradient_boosting'] = GradientBoostingClassifier(**self.config.models['gradient_boosting'])
+
+        # KNN
+        self.models['knn'] = KNeighborsClassifier(**self.config.models['knn'])
+
+        # SVM
+        self.models['svm'] = SVC(**self.config.models['svm'])
 
         logger.info(f"Initialized {len(self.models)} traditional ML models")
 

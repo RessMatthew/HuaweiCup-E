@@ -5,7 +5,7 @@ from typing import Dict, Any
 @dataclass
 class MLConfig:
     # Data paths
-    data_path: str = "data/data_特征提取汇总_标准化.csv"
+    data_path: str = "data/data_out.csv"
 
     # Cross-validation settings
     k_folds: int = 5
@@ -16,8 +16,8 @@ class MLConfig:
 
     # Training settings
     device: str = "mps"  # For macOS GPU acceleration
-    batch_size: int = 32
-    epochs: int = 100
+    batch_size: int = 64
+    epochs: int = 20
     learning_rate: float = 0.001
 
     # Results settings
@@ -74,14 +74,26 @@ class MLConfig:
                     'learning_rate': 0.1,
                     'random_state': self.random_state
                 },
+                'knn': {
+                    'n_neighbors': 5,
+                    'weights': 'uniform',
+                    'metric': 'minkowski',
+                    'p': 2  # p=2 for Euclidean distance
+                },
+                'svm': {
+                    'C': 1.0,
+                    'kernel': 'rbf',
+                    'gamma': 'scale',
+                    'random_state': self.random_state
+                },
                 'cnn': {
                     'input_size': 23,  # Number of features
                     'hidden_size': 128,
                     'num_classes': None,  # Will be determined from data
                     'dropout_rate': 0.3,
                     'learning_rate': 0.001,
-                    'batch_size': 32,
-                    'epochs': 50
+                    'batch_size': 64,
+                    'epochs': 20
                 }
             }
 

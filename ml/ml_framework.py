@@ -192,11 +192,13 @@ def main():
     """Main function to run the ML framework"""
     parser = argparse.ArgumentParser(description='Machine Learning Framework')
     parser.add_argument('--model', type=str, choices=['all', 'decision_tree', 'random_forest', 'adaboost',
-                                                     'extra_trees', 'catboost', 'xgboost', 'gradient_boosting', 'cnn'],
+                                                     'extra_trees', 'catboost', 'xgboost', 'gradient_boosting', 'knn', 'svm', 'cnn'],
                        default='all', help='Model to train (default: all)')
     parser.add_argument('--k_folds', type=int, default=5, help='Number of folds for cross-validation (default: 5)')
     parser.add_argument('--random_state', type=int, default=42, help='Random state for reproducibility (default: 42)')
     parser.add_argument('--device', type=str, default='mps', help='Device for PyTorch (default: mps for macOS)')
+    parser.add_argument('--input_size', type=int, help='Input size for CNN model (overrides config)')
+    parser.add_argument('--epochs', type=int, help='Number of epochs for CNN model (overrides config)')
 
     args = parser.parse_args()
 
@@ -206,6 +208,12 @@ def main():
         random_state=args.random_state,
         device=args.device
     )
+
+    # Override CNN parameters if provided
+    if args.input_size is not None:
+        config.models['cnn']['input_size'] = args.input_size
+    if args.epochs is not None:
+        config.models['cnn']['epochs'] = args.epochs
 
     # Initialize framework
     framework = MLFramework(config)
