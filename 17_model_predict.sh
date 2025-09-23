@@ -1,1 +1,0 @@
-python 15_model_inference.py --model xgboost --data data/t_data_aligned.csv --segment_voting --segments_per_sample 124
