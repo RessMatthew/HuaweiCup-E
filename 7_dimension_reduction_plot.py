@@ -3,15 +3,60 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 import sys
 import argparse
+try:
+    import umap
+    UMAP_AVAILABLE = True
+except ImportError:
+    UMAP_AVAILABLE = False
+    print("Warning: UMAP not available. Install with: pip install umap-learn")
 
-def plot_3d_scatter_in_sphere(feature_columns=None):
+def reduce_dimensions(features, method='pca', n_components=3, random_state=42):
     """
-    读取特征数据，进行PCA降维，并将数据点绘制在一个三维球体内部。
+    使用指定的方法进行降维
+
+    Args:
+        features: 输入特征数据
+        method: 降维方法 ('pca', 'tsne', 'umap')
+        n_components: 降维后的维度数
+        random_state: 随机种子
+
+    Returns:
+        降维后的数据
+    """
+    if method == 'pca':
+        reducer = PCA(n_components=n_components, random_state=random_state)
+        reduced_data = reducer.fit_transform(features)
+        print(f"{method.upper()} Explained Variance Ratio: {reducer.explained_variance_ratio_}")
+        print(f"{method.upper()} Total Explained Variance: {sum(reducer.explained_variance_ratio_):.2f}")
+
+    elif method == 'tsne':
+        reducer = TSNE(n_components=n_components, random_state=random_state, perplexity=30)
+        reduced_data = reducer.fit_transform(features)
+        print(f"{method.upper()} reduction completed")
+
+    elif method == 'umap':
+        if not UMAP_AVAILABLE:
+            print("Error: UMAP not available. Falling back to t-SNE.")
+            return reduce_dimensions(features, 'tsne', n_components, random_state)
+        reducer = umap.UMAP(n_components=n_components, random_state=random_state)
+        reduced_data = reducer.fit_transform(features)
+        print(f"{method.upper()} reduction completed")
+
+    else:
+        raise ValueError(f"Unknown method: {method}")
+
+    return reduced_data
+
+def plot_3d_scatter_in_sphere(feature_columns=None, method='pca'):
+    """
+    读取特征数据，进行降维，并将数据点绘制在一个三维球体内部。
 
     Args:
         feature_columns: 要使用的特征列名列表，如果为None则使用除第一列外的所有列
+        method: 降维方法 ('pca', 'tsne', 'umap')
     """
     # --- 1. 数据加载和准备 ---
     file_path = 'data/data_特征提取汇总_标准化.csv'
@@ -47,14 +92,9 @@ def plot_3d_scatter_in_sphere(feature_columns=None):
     point_colors = target_labels.map(color_map)
     alpha = 0.85
 
-    # --- 3. PCA 降维 ---
+    # --- 3. 降维 ---
     # 将特征降到3维
-    pca = PCA(n_components=3)
-    features_3d = pca.fit_transform(features)
-
-    # 打印解释方差比
-    print(f"PCA Explained Variance Ratio: {pca.explained_variance_ratio_}")
-    print(f"Total Explained Variance: {sum(pca.explained_variance_ratio_):.2f}")
+    features_3d = reduce_dimensions(features, method, n_components=3)
 
     # --- 4. 将数据点映射到球体空间 ---
     # 计算每个点到原点的距离
@@ -113,14 +153,15 @@ def plot_3d_scatter_in_sphere(feature_columns=None):
     ax.legend(title='Target Labels', loc='upper right', bbox_to_anchor=(1.0, 1.0))
 
     # 保存图片
-    plt.savefig('pca_3d.png', dpi=300, bbox_inches='tight')
+    plt.savefig(f'{method}_3d.png', dpi=300, bbox_inches='tight')
 
-def plot_2d_pca(feature_columns=None):
+def plot_2d_projection(feature_columns=None, method='pca'):
     """
-    读取特征数据，进行PCA降维到2维，并绘制散点图。
+    读取特征数据，进行降维到2维，并绘制散点图。
 
     Args:
         feature_columns: 要使用的特征列名列表，如果为None则使用除第一列外的所有列
+        method: 降维方法 ('pca', 'tsne', 'umap')
     """
     # --- 1. 数据加载和准备 ---
     file_path = 'data/data_特征提取汇总_标准化.csv'
@@ -155,14 +196,9 @@ def plot_2d_pca(feature_columns=None):
     color_map = {label: colors[i % len(colors)] for i, label in enumerate(unique_labels)}
     alpha = 0.85
 
-    # --- 3. PCA 降维 ---
+    # --- 3. 降维 ---
     # 将特征降到2维
-    pca = PCA(n_components=2)
-    features_2d = pca.fit_transform(features)
-
-    # 打印解释方差比
-    print(f"2D PCA Explained Variance Ratio: {pca.explained_variance_ratio_}")
-    print(f"2D Total Explained Variance: {sum(pca.explained_variance_ratio_):.2f}")
+    features_2d = reduce_dimensions(features, method, n_components=2)
 
     # --- 4. 绘制2D散点图 ---
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -183,36 +219,38 @@ def plot_2d_pca(feature_columns=None):
     ax.legend(title='Target Labels')
 
     # 保存图片
-    plt.savefig('pca_2d.png', dpi=300, bbox_inches='tight')
+    plt.savefig(f'{method}_2d.png', dpi=300, bbox_inches='tight')
 
 
 def main():
     # 创建参数解析器
-    parser = argparse.ArgumentParser(description='PCA降维可视化工具')
+    parser = argparse.ArgumentParser(description='降维可视化工具 (PCA, t-SNE, UMAP)')
     parser.add_argument('--columns', nargs='+', help='要使用的特征列名，可指定多个列名')
-    parser.add_argument('--only-2d', action='store_true', help='只生成2D PCA图')
-    parser.add_argument('--only-3d', action='store_true', help='只生成3D PCA图')
+    parser.add_argument('--method', choices=['pca', 'tsne', 'umap'], default='pca',
+                       help='降维方法 (默认: pca)')
+    parser.add_argument('--only-2d', action='store_true', help='只生成2D图')
+    parser.add_argument('--only-3d', action='store_true', help='只生成3D图')
 
     # 解析命令行参数
     args = parser.parse_args()
 
     # 根据参数决定执行哪些函数
     if args.columns:
-        print(f"使用指定的列名进行PCA分析: {args.columns}")
+        print(f"使用指定的列名进行{args.method.upper()}分析: {args.columns}")
     else:
-        print("使用所有特征列进行PCA分析")
+        print(f"使用所有特征列进行{args.method.upper()}分析")
 
-    # 执行PCA分析
+    # 执行降维分析
     if not args.only_2d and not args.only_3d:
         # 默认情况：生成2D和3D图
-        plot_3d_scatter_in_sphere(args.columns)
-        plot_2d_pca(args.columns)
+        plot_3d_scatter_in_sphere(args.columns, args.method)
+        plot_2d_projection(args.columns, args.method)
     elif args.only_3d:
         # 只生成3D图
-        plot_3d_scatter_in_sphere(args.columns)
+        plot_3d_scatter_in_sphere(args.columns, args.method)
     elif args.only_2d:
         # 只生成2D图
-        plot_2d_pca(args.columns)
+        plot_2d_projection(args.columns, args.method)
 
 if __name__ == '__main__':
     main()
