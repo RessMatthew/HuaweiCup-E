@@ -1,4 +1,4 @@
-## 多模型训练框架
+## 多模型训练
 
 python ml/ml_framework.py --model decision_tree 
 python ml/ml_framework.py --model random_forest

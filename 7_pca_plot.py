@@ -3,10 +3,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn.decomposition import PCA
+import sys
+import argparse
 
-def plot_3d_scatter_in_sphere():
+def plot_3d_scatter_in_sphere(feature_columns=None):
     """
     读取特征数据，进行PCA降维，并将数据点绘制在一个三维球体内部。
+
+    Args:
+        feature_columns: 要使用的特征列名列表，如果为None则使用除第一列外的所有列
     """
     # --- 1. 数据加载和准备 ---
     file_path = 'data/data_特征提取汇总_标准化.csv'
@@ -18,8 +23,19 @@ def plot_3d_scatter_in_sphere():
 
     # 分离特征和标签
     target_labels = data.iloc[:, 0]
-    features = data.iloc[:, 1:]
-    
+
+    # 根据参数选择特征列
+    if feature_columns:
+        # 如果指定了列名，使用指定的列
+        try:
+            features = data[feature_columns]
+        except KeyError as e:
+            print(f"错误：找不到指定的列 {e}")
+            return
+    else:
+        # 如果没有指定列名，使用除第一列外的所有列
+        features = data.iloc[:, 1:]
+
     # 获取唯一的类别和对应的颜色
     unique_labels = target_labels.unique()
     
@@ -99,9 +115,12 @@ def plot_3d_scatter_in_sphere():
     # 保存图片
     plt.savefig('pca_3d.png', dpi=300, bbox_inches='tight')
 
-def plot_2d_pca():
+def plot_2d_pca(feature_columns=None):
     """
     读取特征数据，进行PCA降维到2维，并绘制散点图。
+
+    Args:
+        feature_columns: 要使用的特征列名列表，如果为None则使用除第一列外的所有列
     """
     # --- 1. 数据加载和准备 ---
     file_path = 'data/data_特征提取汇总_标准化.csv'
@@ -113,8 +132,19 @@ def plot_2d_pca():
 
     # 分离特征和标签
     target_labels = data.iloc[:, 0]
-    features = data.iloc[:, 1:]
-    
+
+    # 根据参数选择特征列
+    if feature_columns:
+        # 如果指定了列名，使用指定的列
+        try:
+            features = data[feature_columns]
+        except KeyError as e:
+            print(f"错误：找不到指定的列 {e}")
+            return
+    else:
+        # 如果没有指定列名，使用除第一列外的所有列
+        features = data.iloc[:, 1:]
+
     # 获取唯一的类别和对应的颜色
     unique_labels = target_labels.unique()
     
@@ -156,6 +186,33 @@ def plot_2d_pca():
     plt.savefig('pca_2d.png', dpi=300, bbox_inches='tight')
 
 
+def main():
+    # 创建参数解析器
+    parser = argparse.ArgumentParser(description='PCA降维可视化工具')
+    parser.add_argument('--columns', nargs='+', help='要使用的特征列名，可指定多个列名')
+    parser.add_argument('--only-2d', action='store_true', help='只生成2D PCA图')
+    parser.add_argument('--only-3d', action='store_true', help='只生成3D PCA图')
+
+    # 解析命令行参数
+    args = parser.parse_args()
+
+    # 根据参数决定执行哪些函数
+    if args.columns:
+        print(f"使用指定的列名进行PCA分析: {args.columns}")
+    else:
+        print("使用所有特征列进行PCA分析")
+
+    # 执行PCA分析
+    if not args.only_2d and not args.only_3d:
+        # 默认情况：生成2D和3D图
+        plot_3d_scatter_in_sphere(args.columns)
+        plot_2d_pca(args.columns)
+    elif args.only_3d:
+        # 只生成3D图
+        plot_3d_scatter_in_sphere(args.columns)
+    elif args.only_2d:
+        # 只生成2D图
+        plot_2d_pca(args.columns)
+
 if __name__ == '__main__':
-    plot_3d_scatter_in_sphere()
-    plot_2d_pca()
+    main()
