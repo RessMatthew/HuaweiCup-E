@@ -1,0 +1,17 @@
+# Core dependencies
+pandas>=1.3.0
+numpy>=1.21.0
+scikit-learn>=1.0.0
+torch>=1.9.0
+
+# Optional dependencies for specific models
+catboost>=1.0.0
+xgboost>=1.5.0
+
+# Visualization and analysis (optional)
+matplotlib>=3.3.0
+seaborn>=0.11.0
+plotly>=5.0.0
+
+# Data processing (optional)
+scipy>=1.7.0

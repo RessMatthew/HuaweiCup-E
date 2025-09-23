@@ -1,6 +1,8 @@
 .debug/
 data/
 notebook/
+results/
+catboost_info/
 
 .bashrc
 
