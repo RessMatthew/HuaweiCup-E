@@ -6,6 +6,7 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import logging
 from typing import Dict, Any
+from bagging_ensemble import BaggingEnsembleTrainer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,6 +45,13 @@ class TraditionalMLModels:
         self.models['svm'] = SVC(**self.config.models['svm'])
 
         logger.info(f"Initialized {len(self.models)} traditional ML models")
+
+    def train_bagging_ensemble(self, X: np.ndarray, y: np.ndarray, cv_splits: list) -> Dict[str, Any]:
+        """Train the bagging ensemble model"""
+        logger.info("Training Bagging ensemble")
+
+        trainer = BaggingEnsembleTrainer(self.config)
+        return trainer.cross_validate_model(X, y, cv_splits)
 
     def initialize_external_models(self):
         """Initialize models that require external libraries"""
@@ -96,6 +104,10 @@ class TraditionalMLModels:
                            cv_splits: list) -> Dict[str, Any]:
         """Perform cross-validation for a specific model"""
         logger.info(f"Cross-validating {model_name} with {len(cv_splits)} folds")
+
+        # Handle bagging ensemble separately
+        if model_name == 'bagging_ensemble':
+            return self.train_bagging_ensemble(X, y, cv_splits)
 
         fold_results = []
         trained_models = []

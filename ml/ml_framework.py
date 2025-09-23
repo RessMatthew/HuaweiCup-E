@@ -192,7 +192,7 @@ def main():
     """Main function to run the ML framework"""
     parser = argparse.ArgumentParser(description='Machine Learning Framework')
     parser.add_argument('--model', type=str, choices=['all', 'decision_tree', 'random_forest', 'adaboost',
-                                                     'extra_trees', 'catboost', 'xgboost', 'gradient_boosting', 'knn', 'svm', 'cnn'],
+                                                     'extra_trees', 'catboost', 'xgboost', 'gradient_boosting', 'knn', 'svm', 'bagging_ensemble', 'cnn'],
                        default='all', help='Model to train (default: all)')
     parser.add_argument('--k_folds', type=int, default=5, help='Number of folds for cross-validation (default: 5)')
     parser.add_argument('--random_state', type=int, default=42, help='Random state for reproducibility (default: 42)')

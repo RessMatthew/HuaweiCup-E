@@ -86,6 +86,17 @@ class MLConfig:
                     'gamma': 'scale',
                     'random_state': self.random_state
                 },
+                'bagging_ensemble': {
+                    'n_estimators': 5,  # Number of base models
+                    'max_samples': 1.0,  # Fraction of samples to draw
+                    'max_features': 1.0,  # Fraction of features to draw
+                    'bootstrap': True,
+                    'bootstrap_features': False,
+                    'oob_score': False,
+                    'random_state': self.random_state,
+                    'n_jobs': -1,
+                    'verbose': 0
+                },
                 'cnn': {
                     'input_size': 23,  # Number of features
                     'hidden_size': 128,
