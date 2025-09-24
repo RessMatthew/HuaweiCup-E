@@ -59,7 +59,7 @@ def plot_3d_scatter_in_sphere(feature_columns=None, method='pca'):
         method: 降维方法 ('pca', 'tsne', 'umap')
     """
     # --- 1. 数据加载和准备 ---
-    file_path = 'data/data_特征提取汇总_标准化.csv'
+    file_path = 'synthetic_data_4classes.csv'
     try:
         data = pd.read_csv(file_path)
     except FileNotFoundError:
@@ -164,7 +164,7 @@ def plot_2d_projection(feature_columns=None, method='pca'):
         method: 降维方法 ('pca', 'tsne', 'umap')
     """
     # --- 1. 数据加载和准备 ---
-    file_path = 'data/data_特征提取汇总_标准化.csv'
+    file_path = 'synthetic_data.csv'
     try:
         data = pd.read_csv(file_path)
     except FileNotFoundError:

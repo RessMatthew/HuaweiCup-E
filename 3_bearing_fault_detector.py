@@ -179,56 +179,57 @@ def load_and_process_data(csv_path, num_samples=10):
     
     return results
 
-def plot_results(results, sample_idx=0, original_signal_data=None):
+def plot_results(results, sample_idx=0, original_signal_data=None, save_individual_plots=True):
     """
     Plot processing results for visualization with updated color scheme
+    Also saves individual subplot images with 7cm width if save_individual_plots=True
     """
     result = results[sample_idx]
     sample_info = result['sample_info']
-    
+
     # Specified color scheme with 85% opacity
     main_color = '#237B9F'  # For first 5 plots solid lines
     accent_colors = ['#FEE066D9', '#EC817ED9', '#AD0B08D9', '#71BFB2D9']  # For bars and dashed lines (85% opacity)
-    
+
     # Create 2x3 subplot layout for 6 plots
     fig, axes = plt.subplots(2, 3, figsize=(18, 12))
-    fig.suptitle(f"Bearing Fault Analysis - Sample {sample_info['index']} (RPM: {sample_info['rpm']}, Label: {sample_info['target_label']})", 
+    fig.suptitle(f"Bearing Fault Analysis - Sample {sample_info['index']} (RPM: {sample_info['rpm']}, Label: {sample_info['target_label']})",
                  fontsize=16, fontweight='bold')
-    
+
     # Plot 1: Original signal (before filtering) - if available
     if original_signal_data is not None:
         axes[0,0].plot(original_signal_data, color=main_color, linewidth=1.5)
         axes[0,0].set_title('Original Signal (Before Filtering)', fontweight='bold', color='black')
     else:
         # If no original data, show a placeholder
-        axes[0,0].text(0.5, 0.5, 'Original Signal\n(Data Not Available)', 
+        axes[0,0].text(0.5, 0.5, 'Original Signal\n(Data Not Available)',
                        ha='center', va='center', transform=axes[0,0].transAxes, fontsize=12, color=main_color)
         axes[0,0].set_title('Original Signal (Before Filtering)', fontweight='bold', color='black')
     axes[0,0].set_xlabel('Sample')
     axes[0,0].set_ylabel('Amplitude')
     axes[0,0].grid(True, alpha=0.85)
-    
+
     # Plot 2: Filtered signal (after high-pass)
     axes[0,1].plot(result['filtered_signal'], color=main_color, linewidth=1.5)
     axes[0,1].set_title('Filtered Signal (High-pass)', fontweight='bold', color='black')
     axes[0,1].set_xlabel('Sample')
     axes[0,1].set_ylabel('Amplitude')
     axes[0,1].grid(True, alpha=0.85)
-    
+
     # Plot 3: Envelope (Hilbert transform)
     axes[0,2].plot(result['envelope'], color=main_color, linewidth=1.5)
     axes[0,2].set_title('Envelope (Hilbert Transform)', fontweight='bold', color='black')
     axes[0,2].set_xlabel('Sample')
     axes[0,2].set_ylabel('Amplitude')
     axes[0,2].grid(True, alpha=0.85)
-    
+
     # Plot 4: Order normalized signal
     axes[1,0].plot(result['order_normalized'], color=main_color, linewidth=1.5)
     axes[1,0].set_title('Order Normalized Signal', fontweight='bold', color='black')
     axes[1,0].set_xlabel('Sample')
     axes[1,0].set_ylabel('Amplitude')
     axes[1,0].grid(True, alpha=0.85)
-    
+
     # Plot 5: Envelope Spectrum (FFT)
     half_len = len(result['frequencies'])//2
     axes[1,1].plot(result['frequencies'][:half_len], result['spectrum'][:half_len], color=main_color, linewidth=1.5)
@@ -236,34 +237,86 @@ def plot_results(results, sample_idx=0, original_signal_data=None):
     axes[1,1].set_xlabel('Frequency (Hz)')
     axes[1,1].set_ylabel('Amplitude')
     axes[1,1].grid(True, alpha=0.85)
-    
+
     # Mark fault frequencies on spectrum with accent colors (dashed lines)
     fault_freqs = result['fault_frequencies']
     for i, (name, freq) in enumerate(fault_freqs.items()):
         if freq <= max(result['frequencies'])/2:
             axes[1,1].axvline(x=freq, color=accent_colors[i % len(accent_colors)], linestyle='--', alpha=0.85, linewidth=2, label=f'{name} ({freq:.1f}Hz)')
     axes[1,1].legend(loc='upper right', fontsize=8, framealpha=0.85)
-    
+
     # Plot 6: COR Index Scores with accent colors
     cor_scores = result['cor_scores']
     fault_names = list(cor_scores.keys())
     cor_values = list(cor_scores.values())
-    
+
     bars = axes[1,2].bar(fault_names, cor_values, color=accent_colors[:len(fault_names)], alpha=0.85, edgecolor='black', linewidth=1)
     axes[1,2].set_title('COR Index Scores', fontweight='bold', color='black')
     axes[1,2].set_ylabel('COR Index')
     axes[1,2].tick_params(axis='x', rotation=45)
     axes[1,2].grid(True, alpha=0.85, axis='y')
-    
+
     # Add value labels on bars
     for bar, value in zip(bars, cor_values):
         height = bar.get_height()
         axes[1,2].text(bar.get_x() + bar.get_width()/2., height + height*0.01,
                       f'{value:.4f}', ha='center', va='bottom', fontsize=9, fontweight='bold', color='black')
-    
+
     plt.tight_layout()
     plt.savefig(f'bearing_analysis_sample_{sample_idx}_complete_updated.png', dpi=300, bbox_inches='tight')
     plt.show()
+
+    # Save individual subplots with 7cm width if requested
+    if save_individual_plots:
+        # 7cm = 2.7559 inches, using 2.76 inches for precision
+        subplot_width = 7  # inches
+        subplot_height = subplot_width * 0.75  # maintain aspect ratio
+
+        # Define the plots to save individually (Original, Filtered, Envelope, Envelope Spectrum)
+        individual_plots = [
+            (0, 0, 'original_signal', 'Original Signal (Before Filtering)', 'Sample', 'Amplitude'),
+            (0, 1, 'filtered_signal', 'Filtered Signal (High-pass)', 'Sample', 'Amplitude'),
+            (0, 2, 'envelope', 'Envelope (Hilbert Transform)', 'Sample', 'Amplitude'),
+            (1, 1, 'spectrum', 'Envelope Spectrum (FFT)', 'Frequency (Hz)', 'Amplitude')
+        ]
+
+        for row, col, data_key, title, xlabel, ylabel in individual_plots:
+            fig_single, ax_single = plt.subplots(figsize=(subplot_width, subplot_height))
+
+            if data_key == 'original_signal':
+                if original_signal_data is not None:
+                    ax_single.plot(original_signal_data, color=main_color, linewidth=1.5)
+                else:
+                    ax_single.text(0.5, 0.5, 'Original Signal\n(Data Not Available)',
+                                   ha='center', va='center', transform=ax_single.transAxes,
+                                   fontsize=10, color=main_color)
+            elif data_key == 'spectrum':
+                half_len = len(result['frequencies'])//2
+                ax_single.plot(result['frequencies'][:half_len], result['spectrum'][:half_len],
+                              color=main_color, linewidth=1.5)
+                # Add fault frequency markers
+                fault_freqs = result['fault_frequencies']
+                for i, (name, freq) in enumerate(fault_freqs.items()):
+                    if freq <= max(result['frequencies'])/2:
+                        ax_single.axvline(x=freq, color=accent_colors[i % len(accent_colors)],
+                                         linestyle='--', alpha=0.85, linewidth=2,
+                                         label=f'{name} ({freq:.1f}Hz)')
+                ax_single.legend(loc='upper right', fontsize=7, framealpha=0.85)
+            else:
+                ax_single.plot(result[data_key], color=main_color, linewidth=1.5)
+
+            ax_single.set_title(title, fontweight='bold', color='black', fontsize=10)
+            ax_single.set_xlabel(xlabel, fontsize=9)
+            ax_single.set_ylabel(ylabel, fontsize=9)
+            ax_single.grid(True, alpha=0.85)
+
+            # Adjust font sizes for better visibility at 7cm width
+            ax_single.tick_params(axis='both', labelsize=8)
+
+            filename = f'bearing_analysis_sample_{sample_idx}_{data_key}_7cm.png'
+            plt.savefig(filename, dpi=300, bbox_inches='tight')
+            plt.close(fig_single)
+            print(f"Saved individual plot: {filename}")
 
 def main():
     """
@@ -285,7 +338,7 @@ def main():
         print()
     
     # Plot first sample with original signal
-    plot_results(results, sample_idx=1999, original_signal_data=results[1999]['original_signal'])
+    plot_results(results, sample_idx=0, original_signal_data=results[0]['original_signal'])
     
     return results
 

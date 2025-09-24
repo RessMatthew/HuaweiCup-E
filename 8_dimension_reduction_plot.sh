@@ -1,5 +1,5 @@
 # COR - PCA
-python 7_dimension_reduction_plot.py --method pca \
+python 7_dimension_reduction_plot.py --method pca --only-2d \
 --columns COR_BPFO COR_BPFI COR_BSF COR_FTF
 
 # COR - t-SNE
