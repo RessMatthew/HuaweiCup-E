@@ -98,6 +98,21 @@ class TraditionalMLModels:
             'f1_score': f1_score(y_val, y_pred, average='weighted')
         }
 
+        # Add prediction probabilities and true labels for ROC curve
+        try:
+            if hasattr(model, 'predict_proba'):
+                y_scores = model.predict_proba(X_val)
+                metrics['y_true'] = y_val
+                metrics['y_scores'] = y_scores
+            elif hasattr(model, 'decision_function'):
+                y_scores = model.decision_function(X_val)
+                metrics['y_true'] = y_val
+                metrics['y_scores'] = y_scores
+        except Exception as e:
+            logger.warning(f"Could not get prediction probabilities for ROC curve: {str(e)}")
+            metrics['y_true'] = y_val
+            metrics['y_scores'] = y_pred  # Fallback to predictions
+
         return metrics
 
     def cross_validate_model(self, model_name: str, X: np.ndarray, y: np.ndarray,

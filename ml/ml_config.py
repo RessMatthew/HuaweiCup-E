@@ -84,6 +84,7 @@ class MLConfig:
                     'C': 1.0,
                     'kernel': 'rbf',
                     'gamma': 'scale',
+                    'probability': True,  # Enable probability estimates for ROC curve
                     'random_state': self.random_state
                 },
                 'bagging_ensemble': {

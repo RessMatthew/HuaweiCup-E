@@ -7,6 +7,10 @@ import logging
 from datetime import datetime
 from typing import Dict, Any, List
 import argparse
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc, roc_auc_score
+from sklearn.preprocessing import label_binarize
+import matplotlib.pyplot as plt
 
 from ml_config import MLConfig
 from data_utils import DataLoaderManager
@@ -192,6 +196,105 @@ class MLFramework:
         print(summary_df.to_string(index=False))
         print("="*80)
 
+    def plot_roc_curves(self, save_plots: bool = True):
+        """Generate ROC curves for all models with AUC values"""
+        logger.info("Generating ROC curves and AUC values")
+
+        # Color scheme from .claude/配色方案.md
+        colors = ['#237B9F', '#71BFB2', '#AD0B08', '#EC817E', '#FEE066']
+        color_alpha = 0.85
+
+        plt.figure(figsize=(7, 7))  # width = 7 inches as specified
+
+        color_idx = 0
+        auc_values = {}
+
+        for model_name, results in self.results.items():
+            if 'fold_results' not in results or 'error' in results:
+                continue
+
+            try:
+                # Collect predictions and true labels from all folds
+                all_y_true = []
+                all_y_scores = []
+
+                for fold_result in results['fold_results']:
+                    if 'y_true' in fold_result and 'y_scores' in fold_result:
+                        all_y_true.extend(fold_result['y_true'])
+                        all_y_scores.extend(fold_result['y_scores'])
+
+                if not all_y_true or not all_y_scores:
+                    logger.warning(f"No prediction data available for {model_name}")
+                    continue
+
+                # Convert to numpy arrays
+                y_true = np.array(all_y_true)
+                y_scores = np.array(all_y_scores)
+
+                # Handle binary classification
+                if len(np.unique(y_true)) == 2:
+                    # For binary classification
+                    if y_scores.ndim > 1 and y_scores.shape[1] == 2:
+                        y_scores = y_scores[:, 1]  # Use probabilities for positive class
+
+                    fpr, tpr, _ = roc_curve(y_true, y_scores)
+                    roc_auc = auc(fpr, tpr)
+
+                else:
+                    # For multi-class classification, use micro-average
+                    n_classes = len(np.unique(y_true))
+                    y_true_bin = label_binarize(y_true, classes=np.unique(y_true))
+
+                    if y_scores.ndim == 1:
+                        logger.warning(f"Single dimension scores for multi-class {model_name}, skipping")
+                        continue
+
+                    fpr, tpr, _ = roc_curve(y_true_bin.ravel(), y_scores.ravel())
+                    roc_auc = auc(fpr, tpr)
+
+                # Store AUC value
+                auc_values[model_name] = roc_auc
+
+                # Plot ROC curve
+                color = colors[color_idx % len(colors)]
+                plt.plot(fpr, tpr, color=color, alpha=color_alpha,
+                        lw=2, label=f'{model_name} (AUC = {roc_auc:.3f})')
+
+                color_idx += 1
+
+            except Exception as e:
+                logger.error(f"Error generating ROC curve for {model_name}: {str(e)}")
+                continue
+
+        # Plot diagonal line
+        plt.plot([0, 1], [0, 1], color='gray', lw=1, linestyle='--', alpha=0.5)
+
+        # Customize plot
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('ROC Curves Comparison')
+        plt.legend(loc="lower right")
+        plt.grid(True, alpha=0.3)
+
+        # Save plot
+        if save_plots:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            plot_file = os.path.join(self.config.results_dir, f"roc_curves_{timestamp}.png")
+            plt.savefig(plot_file, dpi=300, bbox_inches='tight', facecolor='white')
+            logger.info(f"Saved ROC curves plot to {plot_file}")
+
+        # Print AUC values summary
+        print("\n" + "="*50)
+        print("AUC VALUES SUMMARY")
+        print("="*50)
+        for model_name, auc_val in sorted(auc_values.items(), key=lambda x: x[1], reverse=True):
+            print(f"{model_name:<20}: {auc_val:.4f}")
+        print("="*50)
+
+        return auc_values
+
 def main():
     """Main function to run the ML framework"""
     parser = argparse.ArgumentParser(description='Machine Learning Framework')
@@ -240,6 +343,9 @@ def main():
 
     # Save summary report
     framework.save_summary_report()
+
+    # Generate ROC curves and AUC values
+    framework.plot_roc_curves()
 
     logger.info("Training completed!")
 
