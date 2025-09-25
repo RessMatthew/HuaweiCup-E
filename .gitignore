@@ -4,6 +4,7 @@ notebook/
 results/
 catboost_info/
 models/
+.claude/
 
 .bashrc
 

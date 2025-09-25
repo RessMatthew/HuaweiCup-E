@@ -1,5 +1,12 @@
 # 高速列车轴承智能故障诊断系统
 
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-HuaweiCup--E-orange.svg)](https://github.com/your-username/HuaweiCup-E)
+[![Status](https://img.shields.io/badge/Status-Completed-brightgreen.svg)](https://github.com/your-username/HuaweiCup-E)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](README.md)
+[![GPU](https://img.shields.io/badge/GPU-CUDA%20%7C%20MPS%20Support-blue.svg)](README.md)
+
 ## 项目概述
 
 本项目是2025年华为杯研究生数学建模大赛E题"高速列车轴承智能故障诊断问题"的完整解决方案。项目采用迁移学习方法，结合深度学习技术，实现了从试验台数据到实际列车数据的故障诊断知识迁移。
